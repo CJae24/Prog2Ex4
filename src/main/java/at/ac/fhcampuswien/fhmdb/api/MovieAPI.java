@@ -4,10 +4,8 @@ import at.ac.fhcampuswien.fhmdb.models.Genre;
 import at.ac.fhcampuswien.fhmdb.models.Movie;
 import okhttp3.*;
 import com.google.gson.Gson;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+
+import java.util.*;
 
 public class MovieAPI {
     public static final String DELIMITER = "&";
@@ -22,42 +20,12 @@ public class MovieAPI {
         return url.toString();
     }
 
-    private static String buildUrl(String query, Genre genre, String releaseYear, String ratingFrom) {
-        StringBuilder url = new StringBuilder(URL);
-
-        if ( (query != null && !query.isEmpty()) ||
-                genre != null || releaseYear != null || ratingFrom != null) {
-
-            url.append("?");
-
-            // check all parameters and add them to the url
-            if (query != null && !query.isEmpty()) {
-                url.append("query=").append(query).append(DELIMITER);
-            }
-            if (genre != null) {
-                url.append("genre=").append(genre).append(DELIMITER);
-            }
-            if (releaseYear != null) {
-                url.append("releaseYear=").append(releaseYear).append(DELIMITER);
-            }
-            if (ratingFrom != null) {
-                url.append("ratingFrom=").append(ratingFrom).append(DELIMITER);
-            }
-        }
-
-        return url.toString();
-    }
-
-    public static List<Movie> getAllMovies() throws MovieApiException {
-        return getAllMovies(null, null, null, null);
-    }
-
-    public static List<Movie> getAllMovies(String query, Genre genre, String releaseYear, String ratingFrom) throws MovieApiException{
-        String url = buildUrl(query, genre, releaseYear, ratingFrom);
+    public static List<Movie> getMovies(MovieAPIBuilder builder) throws MovieApiException {
+        String url = builder.build();
         Request request = new Request.Builder()
                 .url(url)
                 .removeHeader("User-Agent")
-                .addHeader("User-Agent", "http.agent")  // needed for the server to accept the request
+                .addHeader("User-Agent", "http.agent")
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -71,17 +39,63 @@ public class MovieAPI {
         }
     }
 
-    public Movie requestMovieById(UUID id) throws MovieApiException {
-        String url = buildUrl(id);
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
 
-        try (Response response = client.newCall(request).execute()) {
-            Gson gson = new Gson();
-            return gson.fromJson(Objects.requireNonNull(response.body()).string(), Movie.class);
-        } catch (Exception e) {
-            throw new MovieApiException(e.getMessage());
+    public static class MovieAPIBuilder {
+        private final String base;
+        private String query;
+        private Genre genre;
+        private String releaseYear;
+        private String ratingFrom;
+
+        public MovieAPIBuilder() {
+            this.base = URL;
         }
+
+        public MovieAPIBuilder query(String query) {
+            this.query = query;
+            return this;
+        }
+
+        public MovieAPIBuilder genre(Genre genre) {
+            this.genre = genre;
+            return this;
+        }
+
+        public MovieAPIBuilder releaseYear(String releaseYear) {
+            this.releaseYear = releaseYear;
+            return this;
+        }
+
+        public MovieAPIBuilder ratingFrom(String ratingFrom) {
+            this.ratingFrom = ratingFrom;
+            return this;
+        }
+
+        public String build() {
+            StringBuilder url = new StringBuilder(this.base);
+            List<String> params = new ArrayList<>();
+
+            if (this.query != null && !this.query.isEmpty()) {
+                params.add("query=" + this.query);
+            }
+            if (this.genre != null) {
+                params.add("genre=" + this.genre);
+            }
+            if (this.releaseYear != null) {
+                params.add("releaseYear=" + this.releaseYear);
+            }
+            if (this.ratingFrom != null) {
+                params.add("ratingFrom=" + this.ratingFrom);
+            }
+
+            if (!params.isEmpty()) {
+                url.append("?").append(String.join("&", params));
+            }
+
+            return url.toString();
+        }
+
     }
+
 }
+

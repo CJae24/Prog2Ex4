@@ -6,6 +6,7 @@ import at.ac.fhcampuswien.fhmdb.api.MovieApiException;
 import at.ac.fhcampuswien.fhmdb.database.*;
 import at.ac.fhcampuswien.fhmdb.models.Genre;
 import at.ac.fhcampuswien.fhmdb.models.Movie;
+import at.ac.fhcampuswien.fhmdb.observer.Observer;
 import at.ac.fhcampuswien.fhmdb.sorting.AscendingState;
 import at.ac.fhcampuswien.fhmdb.sorting.DescendingState;
 import at.ac.fhcampuswien.fhmdb.sorting.SortManager;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class MovieListController implements Initializable {
+public class MovieListController implements Initializable, Observer {
     @FXML
     public JFXButton searchBtn;
 
@@ -70,6 +71,15 @@ public class MovieListController implements Initializable {
         }
     };
 
+
+    public MovieListController() {
+        try {
+            WatchlistRepository.getInstance().addObserver(this);
+        } catch (DataBaseException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         initializeState();
@@ -81,7 +91,7 @@ public class MovieListController implements Initializable {
         try {
             result = MovieAPI.getAllMovies();
             writeCache(result);
-        } catch (MovieApiException e){
+        } catch (MovieApiException e) {
             UserDialog dialog = new UserDialog("MovieAPI Error", "Could not load movies from api. Get movies from db cache instead");
             dialog.show();
             result = readCache();
@@ -159,12 +169,11 @@ public class MovieListController implements Initializable {
     }
 
     public void sortMovies() {
-        if (sortManager.getState() instanceof UnsortedState){
+        if (sortManager.getState() instanceof UnsortedState) {
             sortManager.setState(new AscendingState());
         } else if (sortManager.getState() instanceof AscendingState) {
             sortManager.setState(new DescendingState());
-        }
-        else if (sortManager.getState() instanceof DescendingState) {
+        } else if (sortManager.getState() instanceof DescendingState) {
             sortManager.setState(new AscendingState());
         }
         sortManager.sort(observableMovies);
@@ -192,10 +201,10 @@ public class MovieListController implements Initializable {
 //        }
 //    }
 
-    public List<Movie> filterByQuery(List<Movie> movies, String query){
-        if(query == null || query.isEmpty()) return movies;
+    public List<Movie> filterByQuery(List<Movie> movies, String query) {
+        if (query == null || query.isEmpty()) return movies;
 
-        if(movies == null) {
+        if (movies == null) {
             throw new IllegalArgumentException("movies must not be null");
         }
 
@@ -205,10 +214,10 @@ public class MovieListController implements Initializable {
                 .toList();
     }
 
-    public List<Movie> filterByGenre(List<Movie> movies, Genre genre){
-        if(genre == null) return movies;
+    public List<Movie> filterByGenre(List<Movie> movies, Genre genre) {
+        if (genre == null) return movies;
 
-        if(movies == null) {
+        if (movies == null) {
             throw new IllegalArgumentException("movies must not be null");
         }
 
@@ -237,7 +246,7 @@ public class MovieListController implements Initializable {
         String genreValue = validateComboboxValue(genreComboBox.getSelectionModel().getSelectedItem());
 
         Genre genre = null;
-        if(genreValue != null) {
+        if (genreValue != null) {
             genre = Genre.valueOf(genreValue);
         }
 
@@ -252,16 +261,16 @@ public class MovieListController implements Initializable {
     }
 
     public String validateComboboxValue(Object value) {
-        if(value != null && !value.toString().equals("No filter")) {
+        if (value != null && !value.toString().equals("No filter")) {
             return value.toString();
         }
         return null;
     }
 
     public List<Movie> getMovies(String searchQuery, Genre genre, String releaseYear, String ratingFrom) {
-        try{
+        try {
             return MovieAPI.getAllMovies(searchQuery, genre, releaseYear, ratingFrom);
-        }catch (MovieApiException e){
+        } catch (MovieApiException e) {
             System.out.println(e.getMessage());
             UserDialog dialog = new UserDialog("MovieApi Error", "Could not load movies from api.");
             dialog.show();
@@ -271,5 +280,10 @@ public class MovieListController implements Initializable {
 
     public void sortBtnClicked(ActionEvent actionEvent) {
         sortMovies();
+    }
+
+    @Override
+    public void update(String message) {
+
     }
 }

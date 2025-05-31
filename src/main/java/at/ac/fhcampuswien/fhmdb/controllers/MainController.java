@@ -1,7 +1,11 @@
 package at.ac.fhcampuswien.fhmdb.controllers;
 
+import at.ac.fhcampuswien.fhmdb.database.DataBaseException;
+import at.ac.fhcampuswien.fhmdb.database.WatchlistRepository;
 import at.ac.fhcampuswien.fhmdb.enums.UIComponent;
 import at.ac.fhcampuswien.fhmdb.models.Movie;
+import at.ac.fhcampuswien.fhmdb.observer.Observer;
+import at.ac.fhcampuswien.fhmdb.ui.UserDialog;
 import com.jfoenix.controls.*;
 import com.jfoenix.transitions.hamburger.HamburgerBasicCloseTransition;
 import javafx.animation.TranslateTransition;
@@ -15,7 +19,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class MainController {
+public class MainController implements Observer {
     @FXML
     public JFXHamburger hamburgerMenu;
 
@@ -29,11 +33,19 @@ public class MainController {
 
     private HamburgerBasicCloseTransition transition;
 
+
+    public MainController() {
+        try {
+            WatchlistRepository.getInstance().addObserver(this);
+        } catch (DataBaseException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void initialize() {
         transition = new HamburgerBasicCloseTransition(hamburgerMenu);
         transition.setRate(-1);
         drawer.toBack();
-
         hamburgerMenu.addEventHandler(MouseEvent.MOUSE_CLICKED, (e) -> {
             toggleMenuDrawer();
         });
@@ -41,22 +53,22 @@ public class MainController {
         navigateToMovielist();
     }
 
-    private void toggleHamburgerTransitionState(){
+    private void toggleHamburgerTransitionState() {
         transition.setRate(transition.getRate() * -1);
         transition.play();
     }
 
-    private void toggleMenuDrawer(){
+    private void toggleMenuDrawer() {
         toggleHamburgerTransitionState();
 
-        if(isMenuCollapsed) {
-            TranslateTransition translateTransition=new TranslateTransition(Duration.seconds(0.5), drawer);
+        if (isMenuCollapsed) {
+            TranslateTransition translateTransition = new TranslateTransition(Duration.seconds(0.5), drawer);
             translateTransition.setByX(130);
             translateTransition.play();
             isMenuCollapsed = false;
             drawer.toFront();
         } else {
-            TranslateTransition translateTransition=new TranslateTransition(Duration.seconds(0.5), drawer);
+            TranslateTransition translateTransition = new TranslateTransition(Duration.seconds(0.5), drawer);
             translateTransition.setByX(-130);
             translateTransition.play();
             isMenuCollapsed = true;
@@ -64,7 +76,7 @@ public class MainController {
         }
     }
 
-    public void setContent(String fxmlPath){
+    public void setContent(String fxmlPath) {
         FXMLLoader loader = new FXMLLoader(MainController.class.getResource(fxmlPath));
         try {
             mainPane.setCenter(loader.load());
@@ -72,7 +84,7 @@ public class MainController {
             e.printStackTrace();
         }
 
-        if(!isMenuCollapsed){
+        if (!isMenuCollapsed) {
             toggleMenuDrawer();
         }
     }
@@ -118,5 +130,11 @@ public class MainController {
     @FXML
     public void navigateToMovielist() {
         setContent(UIComponent.MOVIELIST.path);
+    }
+
+    @Override
+    public void update(String message) {
+        UserDialog dialog = new UserDialog("Watchlist", message);
+        dialog.show();
     }
 }

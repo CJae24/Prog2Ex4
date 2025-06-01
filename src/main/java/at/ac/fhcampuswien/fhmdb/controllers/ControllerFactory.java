@@ -10,21 +10,21 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
 
     @Override
     public Object call(Class<?> aClass) {
-        //System.out.println("Ich werde aufgerufen mit: " + aClass.getSimpleName());
+        System.out.println(aClass.getSimpleName() + " called in ControllerFactory");
         try {
             if (aClass == MainController.class) {
                 if (mainController == null) {
-                    mainController = new MainController();
+                    mainController = MainController.getInstance();
                 }
                 return mainController;
             } else if (aClass == MovieListController.class) {
                 if (movieListController == null) {
-                    movieListController = new MovieListController();
+                    movieListController = MovieListController.getInstance();
                 }
                 return movieListController;
             } else if (aClass == WatchlistController.class) {
                 if (watchlistController == null) {
-                    watchlistController = new WatchlistController();
+                    watchlistController = WatchlistController.getInstance();
                 }
                 return watchlistController;
             } else {

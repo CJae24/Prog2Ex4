@@ -8,17 +8,8 @@ import com.google.gson.Gson;
 import java.util.*;
 
 public class MovieAPI {
-    public static final String DELIMITER = "&";
     private static final String URL = "https://prog2.fh-campuswien.ac.at/movies"; // https if certificates work
     private static final OkHttpClient client = new OkHttpClient();
-
-    private String buildUrl(UUID id) {
-        StringBuilder url = new StringBuilder(URL);
-        if (id != null) {
-            url.append("/").append(id);
-        }
-        return url.toString();
-    }
 
     public static List<Movie> getMovies(MovieAPIBuilder builder) throws MovieApiException {
         String url = builder.build();

@@ -25,12 +25,21 @@ public class WatchlistController implements Initializable, Observer {
 
     protected ObservableList<MovieEntity> observableWatchlist = FXCollections.observableArrayList();
 
+    private static WatchlistController instance;
+
     public WatchlistController() {
         try {
             WatchlistRepository.getInstance().addObserver(this);
         } catch (DataBaseException e) {
             e.printStackTrace();
         }
+    }
+
+    public static WatchlistController getInstance() {
+        if (instance == null) {
+            instance = new WatchlistController();
+        }
+        return instance;
     }
 
     private final ClickEventHandler onRemoveFromWatchlistClicked = (o) -> {

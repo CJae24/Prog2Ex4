@@ -57,6 +57,8 @@ public class MovieListController implements Initializable, Observer {
 
     private final SortManager sortManager = new SortManager();
 
+    private static MovieListController instance;
+
     private final ClickEventHandler onAddToWatchlistClicked = (clickedItem) -> {
         if (clickedItem instanceof Movie movie) {
             WatchlistMovieEntity watchlistMovieEntity = new WatchlistMovieEntity(
@@ -72,13 +74,19 @@ public class MovieListController implements Initializable, Observer {
         }
     };
 
-
     public MovieListController() {
         try {
             WatchlistRepository.getInstance().addObserver(this);
         } catch (DataBaseException e) {
             e.printStackTrace();
         }
+    }
+
+    public static MovieListController getInstance() {
+        if (instance == null) {
+            instance = new MovieListController();
+        }
+        return instance;
     }
 
     @Override

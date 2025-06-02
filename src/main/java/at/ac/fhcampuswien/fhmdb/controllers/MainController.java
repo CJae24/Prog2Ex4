@@ -8,6 +8,7 @@ import at.ac.fhcampuswien.fhmdb.observer.Observer;
 import at.ac.fhcampuswien.fhmdb.ui.UserDialog;
 import com.jfoenix.controls.*;
 import com.jfoenix.transitions.hamburger.HamburgerBasicCloseTransition;
+import com.sun.tools.javac.Main;
 import javafx.animation.TranslateTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -15,6 +16,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.util.Duration;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -33,6 +35,8 @@ public class MainController implements Observer {
 
     private HamburgerBasicCloseTransition transition;
 
+    private static MainController instance;
+
 
     public MainController() {
         try {
@@ -40,6 +44,13 @@ public class MainController implements Observer {
         } catch (DataBaseException e) {
             e.printStackTrace();
         }
+    }
+
+    public static MainController getInstance() {
+        if (instance == null) {
+            instance = new MainController();
+        }
+        return instance;
     }
 
     public void initialize() {
@@ -76,18 +87,16 @@ public class MainController implements Observer {
         }
     }
 
-    public void setContent(String fxmlPath) {
+    private void setContent(String fxmlPath) {
         FXMLLoader loader = new FXMLLoader(MainController.class.getResource(fxmlPath));
+        loader.setControllerFactory(new ControllerFactory());
         try {
             mainPane.setCenter(loader.load());
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
-
-        if (!isMenuCollapsed) {
-            toggleMenuDrawer();
-        }
     }
+
 
     // count which actor is in the most movies
     public String getMostPopularActor(List<Movie> movies) {
